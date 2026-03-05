@@ -13,9 +13,9 @@ function decodeHtmlEntities(value: string) {
 }
 
 function extractBuildcode(html: string) {
-  const divRegex =
-    /<div\b[^>]*\baria-label\s*=\s*["']Path of Building buildcode["'][^>]*>([\s\S]*?)<\/div>/i;
-  const match = html.match(divRegex);
+  const elementRegex =
+    /<(?:div|textarea)\b[^>]*\baria-label\s*=\s*["']Path of Building buildcode["'][^>]*>([\s\S]*?)<\/(?:div|textarea)>/i;
+  const match = html.match(elementRegex);
   if (!match?.[1]) {
     return null;
   }
@@ -65,7 +65,13 @@ export async function POST(request: Request) {
     });
 
     const text = await response.text();
-    const buildcode = extractBuildcode(text) ?? text;
+    const buildcode = extractBuildcode(text);
+    if (!buildcode) {
+      return NextResponse.json(
+        { error: "Buildcode nao encontrado no resultado da requisicao." },
+        { status: 404 }
+      );
+    }
 
     return NextResponse.json({
       ok: response.ok,

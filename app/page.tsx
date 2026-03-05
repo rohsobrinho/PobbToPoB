@@ -15,12 +15,24 @@ export default function HomePage() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<FetchResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  async function copyBuildcode(value: string) {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      setError("Nao foi possivel copiar para o clipboard.");
+    }
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setLoading(true);
     setResult(null);
     setError(null);
+    setCopied(false);
 
     try {
       const response = await fetch("/api/pobb", {
@@ -71,7 +83,21 @@ export default function HomePage() {
           <div className="stack">
             <p className="muted">Status: {result.status}</p>
             <p className="muted">URL final: {result.finalUrl}</p>
-            <pre className="response">{result.buildcode}</pre>
+            <input
+              className="response-line"
+              value={result.buildcode}
+              readOnly
+              onClick={() => copyBuildcode(result.buildcode)}
+              title="Clique para copiar"
+            />
+            <button
+              className="button"
+              type="button"
+              onClick={() => copyBuildcode(result.buildcode)}
+            >
+              Copiar buildcode
+            </button>
+            {copied ? <p className="success">Copiado!</p> : null}
           </div>
         ) : null}
       </div>
