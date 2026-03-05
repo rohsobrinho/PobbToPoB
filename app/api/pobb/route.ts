@@ -2,6 +2,33 @@ import { NextResponse } from "next/server";
 
 type RequestBody = { url?: string };
 
+function decodeHtmlEntities(value: string) {
+  return value
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&#x2F;/gi, "/");
+}
+
+function extractBuildcode(html: string) {
+  const divRegex =
+    /<div\b[^>]*\baria-label\s*=\s*["']Path of Building buildcode["'][^>]*>([\s\S]*?)<\/div>/i;
+  const match = html.match(divRegex);
+  if (!match?.[1]) {
+    return null;
+  }
+
+  // Remove nested tags and normalize spacing before returning the code.
+  const raw = match[1].replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+  if (!raw) {
+    return null;
+  }
+
+  return decodeHtmlEntities(raw);
+}
+
 function isAllowedPobbUrl(input: string) {
   let parsed: URL;
   try {
@@ -38,12 +65,19 @@ export async function POST(request: Request) {
     });
 
     const text = await response.text();
+    const buildcode = extractBuildcode(text);
+    if (!buildcode) {
+      return NextResponse.json(
+        { error: "Buildcode nao encontrado na pagina informada." },
+        { status: 404 }
+      );
+    }
+
     return NextResponse.json({
       ok: response.ok,
       status: response.status,
       finalUrl: response.url,
-      contentType: response.headers.get("content-type") ?? "desconhecido",
-      body: text
+      buildcode
     });
   } catch {
     return NextResponse.json(

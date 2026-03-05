@@ -6,8 +6,7 @@ type FetchResult = {
   ok: boolean;
   status: number;
   finalUrl: string;
-  body: string;
-  contentType: string;
+  buildcode: string;
   error?: string;
 };
 
@@ -72,8 +71,7 @@ export default function HomePage() {
           <div className="stack">
             <p className="muted">Status: {result.status}</p>
             <p className="muted">URL final: {result.finalUrl}</p>
-            <p className="muted">Content-Type: {result.contentType}</p>
-            <pre className="response">{result.body}</pre>
+            <pre className="response">{result.buildcode}</pre>
           </div>
         ) : null}
       </div>
