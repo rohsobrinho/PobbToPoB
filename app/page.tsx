@@ -60,7 +60,7 @@ export default function HomePage() {
         <h1>Consulta de URL pobb.in</h1>
         <p className="muted">
           Informe uma URL como <code>https://pobb.in/3J6Dm6pkA6-5</code> e veja
-          o retorno da requisicao.
+          o retorno da requisição.
         </p>
 
         <form className="stack" onSubmit={handleSubmit}>
@@ -81,8 +81,6 @@ export default function HomePage() {
 
         {result ? (
           <div className="stack">
-            <p className="muted">Status: {result.status}</p>
-            <p className="muted">URL final: {result.finalUrl}</p>
             <input
               className="response-line"
               value={result.buildcode}
@@ -95,9 +93,9 @@ export default function HomePage() {
               type="button"
               onClick={() => copyBuildcode(result.buildcode)}
             >
-              Copiar buildcode
+              Copiar code
             </button>
-            {copied ? <p className="success">Copiado!</p> : null}
+            {copied ? <p className="success">Copiado! Importe no seu PoB.</p> : null}
           </div>
         ) : null}
       </div>
