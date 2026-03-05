@@ -65,13 +65,7 @@ export async function POST(request: Request) {
     });
 
     const text = await response.text();
-    const buildcode = extractBuildcode(text);
-    if (!buildcode) {
-      return NextResponse.json(
-        { error: "Buildcode nao encontrado na pagina informada." },
-        { status: 404 }
-      );
-    }
+    const buildcode = extractBuildcode(text) ?? text;
 
     return NextResponse.json({
       ok: response.ok,
