@@ -17,7 +17,12 @@
 body {
   margin: 0;
   font-family: "Fontin Regular", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  background: linear-gradient(135deg, #f6f7fb 0%, #eef3ff 100%);
+  background-color: #0b0f1a;
+  background-image: url("https://web.poecdn.com/protected/image/layout/keepersoftheflame-bg.jpg?v=1760327226353&key=6rOD4hOtdXO9aKxw9OER0A");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
   color: #111827;
   text-transform: uppercase;
 }

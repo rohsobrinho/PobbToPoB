@@ -6,12 +6,13 @@ type FetchResult = {
   ok: boolean;
   status: number;
   finalUrl: string;
+  ascendancyH1Html: string | null;
   buildcode: string;
   error?: string;
 };
 
 export default function HomePage() {
-  const [url, setUrl] = useState("https://pobb.in/3J6Dm6pkA6-5");
+  const [url, setUrl] = useState(""); // https://pobb.in/3J6Dm6pkA6-5
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<FetchResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -81,6 +82,12 @@ export default function HomePage() {
 
         {result ? (
           <div className="stack">
+            {result.ascendancyH1Html ? (
+              <div
+                className="muted"
+                dangerouslySetInnerHTML={{ __html: result.ascendancyH1Html }}
+              />
+            ) : null}
             <input
               className="response-line"
               value={result.buildcode}

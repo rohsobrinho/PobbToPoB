@@ -29,6 +29,28 @@ function extractBuildcode(html: string) {
   return decodeHtmlEntities(raw);
 }
 
+function extractClosestH1AboveAscendancyImage(html: string) {
+  const imgRegex = /<img\b[^>]*\balt\s*=\s*["']Ascendancy Thumbnail["'][^>]*>/i;
+  const imgMatch = imgRegex.exec(html);
+  if (!imgMatch || imgMatch.index < 0) {
+    return null;
+  }
+
+  const targetIndex = imgMatch.index;
+  const h1Regex = /<h1\b[^>]*>[\s\S]*?<\/h1>/gi;
+  let match: RegExpExecArray | null;
+  let closestH1Html: string | null = null;
+
+  while ((match = h1Regex.exec(html)) !== null) {
+    if (match.index >= targetIndex) {
+      break;
+    }
+    closestH1Html = match[0];
+  }
+
+  return closestH1Html;
+}
+
 function isAllowedPobbUrl(input: string) {
   let parsed: URL;
   try {
@@ -66,6 +88,7 @@ export async function POST(request: Request) {
 
     const text = await response.text();
     const buildcode = extractBuildcode(text);
+    const ascendancyH1Html = extractClosestH1AboveAscendancyImage(text);
     if (!buildcode) {
       return NextResponse.json(
         { error: "Buildcode nao encontrado no resultado da requisicao." },
@@ -77,6 +100,7 @@ export async function POST(request: Request) {
       ok: response.ok,
       status: response.status,
       finalUrl: response.url,
+      ascendancyH1Html,
       buildcode
     });
   } catch {
