@@ -64,15 +64,22 @@ function isAllowedPobbUrl(input: string) {
   return protocolOk && hostOk;
 }
 
+function removeQueryParams(input: string) {
+  const parsed = new URL(input);
+  parsed.search = "";
+  parsed.hash = "";
+  return parsed.toString();
+}
+
 export async function POST(request: Request) {
   const body = (await request.json().catch(() => null)) as RequestBody | null;
-  const url = body?.url?.trim();
+  const rawUrl = body?.url?.trim();
 
-  if (!url) {
+  if (!rawUrl) {
     return NextResponse.json({ error: "URL obrigatoria." }, { status: 400 });
   }
 
-  if (!isAllowedPobbUrl(url)) {
+  if (!isAllowedPobbUrl(rawUrl)) {
     return NextResponse.json(
       { error: "Somente URLs de pobb.in sao permitidas." },
       { status: 400 }
@@ -80,6 +87,7 @@ export async function POST(request: Request) {
   }
 
   try {
+    const url = removeQueryParams(rawUrl);
     const response = await fetch(url, {
       method: "GET",
       redirect: "follow",
