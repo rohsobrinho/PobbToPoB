@@ -75,6 +75,15 @@ main {
   color: #0f172a;
 }
 
+.pob-button {
+  background: linear-gradient(135deg, #14532d, #166534);
+  border-color: #166534;
+}
+
+.pob-button:hover {
+  background: linear-gradient(135deg, #166534, #15803d);
+}
+
 .muted {
   color: #6b7280;
   font-size: 14px;

@@ -2,6 +2,11 @@ import { NextResponse } from "next/server";
 
 type RequestBody = { url?: string };
 
+type PoeNinjaUploadResult = {
+  poeNinjaCode: string | null;
+  poeNinjaUrl: string | null;
+};
+
 function decodeHtmlEntities(value: string) {
   return value
     .replace(/&amp;/g, "&")
@@ -71,6 +76,83 @@ function removeQueryParams(input: string) {
   return parsed.toString();
 }
 
+function extractLastPathSegment(input: string) {
+  try {
+    const parsed = new URL(input);
+    const segments = parsed.pathname.split("/").filter(Boolean);
+    return segments.at(-1) ?? null;
+  } catch {
+    return null;
+  }
+}
+
+async function uploadToPoeNinja(code: string): Promise<PoeNinjaUploadResult> {
+  const endpoint = "https://poe.ninja/poe1/pob/api/upload";
+  const payloads: BodyInit[] = [
+    JSON.stringify({ code }),
+    new URLSearchParams({ code }),
+    (() => {
+      const formData = new FormData();
+      formData.set("code", code);
+      return formData;
+    })()
+  ];
+
+  const headersList: HeadersInit[] = [
+    { "Content-Type": "application/json" },
+    { "Content-Type": "application/x-www-form-urlencoded" },
+    {}
+  ];
+
+  for (let index = 0; index < payloads.length; index += 1) {
+    try {
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: headersList[index],
+        body: payloads[index]
+      });
+
+      if (!response.ok) {
+        continue;
+      }
+
+      const responseText = (await response.text()).trim();
+      if (!responseText) {
+        continue;
+      }
+
+      let poeNinjaUrl: string | null = null;
+      const jsonMatch = responseText.startsWith("{")
+        ? JSON.parse(responseText)
+        : null;
+
+      if (typeof jsonMatch === "string") {
+        poeNinjaUrl = jsonMatch;
+      } else if (jsonMatch && typeof jsonMatch === "object") {
+        const possibleUrl = [
+          "url",
+          "result",
+          "location",
+          "link"
+        ].map((key) => jsonMatch[key as keyof typeof jsonMatch]);
+        const firstUrl = possibleUrl.find((value) => typeof value === "string");
+        poeNinjaUrl = typeof firstUrl === "string" ? firstUrl : null;
+      } else if (responseText.startsWith("http")) {
+        poeNinjaUrl = responseText;
+      }
+
+      const poeNinjaCode = poeNinjaUrl ? extractLastPathSegment(poeNinjaUrl) : null;
+      if (poeNinjaCode) {
+        return { poeNinjaCode, poeNinjaUrl };
+      }
+    } catch {
+      continue;
+    }
+  }
+
+  return { poeNinjaCode: null, poeNinjaUrl: null };
+}
+
 export async function POST(request: Request) {
   const body = (await request.json().catch(() => null)) as RequestBody | null;
   const rawUrl = body?.url?.trim();
@@ -97,6 +179,7 @@ export async function POST(request: Request) {
     const text = await response.text();
     const buildcode = extractBuildcode(text);
     const ascendancyH1Html = extractClosestH1AboveAscendancyImage(text);
+
     if (!buildcode) {
       return NextResponse.json(
         { error: "Buildcode nao encontrado no resultado da requisicao." },
@@ -104,12 +187,16 @@ export async function POST(request: Request) {
       );
     }
 
+    const { poeNinjaCode, poeNinjaUrl } = await uploadToPoeNinja(buildcode);
+
     return NextResponse.json({
       ok: response.ok,
       status: response.status,
       finalUrl: response.url,
       ascendancyH1Html,
-      buildcode
+      buildcode,
+      poeNinjaCode,
+      poeNinjaUrl
     });
   } catch {
     return NextResponse.json(

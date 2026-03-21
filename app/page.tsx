@@ -8,6 +8,8 @@ type FetchResult = {
   finalUrl: string;
   ascendancyH1Html: string | null;
   buildcode: string;
+  poeNinjaCode: string | null;
+  poeNinjaUrl: string | null;
   error?: string;
 };
 
@@ -103,6 +105,14 @@ export default function HomePage() {
             >
               Copiar code
             </button>
+            {result.poeNinjaCode ? (
+              <a
+                className="button pob-button"
+                href={`pob://poeninja/${result.poeNinjaCode}`}
+              >
+                Abrir no PoB
+              </a>
+            ) : null}
             {copied ? <p className="success">Copiado! Importe no seu PoB.</p> : null}
           </div>
         ) : null}
