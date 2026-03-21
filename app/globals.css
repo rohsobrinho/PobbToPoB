@@ -41,6 +41,12 @@ main {
   gap: 14px;
 }
 
+.action-row {
+  display: flex;
+  gap: 10px;
+  align-items: stretch;
+}
+
 .row {
   display: flex;
   gap: 10px;
@@ -75,7 +81,12 @@ main {
   color: #0f172a;
 }
 
+.copy-button {
+  flex: 1;
+}
+
 .pob-button {
+  flex: 1.6;
   background: linear-gradient(135deg, #14532d, #166534);
   border-color: #166534;
 }
@@ -87,6 +98,10 @@ main {
 .muted {
   color: #6b7280;
   font-size: 14px;
+}
+
+.ascendancy-title {
+  text-align: center;
 }
 
 .error {
@@ -202,6 +217,10 @@ main {
 }
 
 @media (max-width: 640px) {
+  .action-row {
+    flex-direction: column;
+  }
+
   .repo-fab {
     right: 12px;
     bottom: 12px;

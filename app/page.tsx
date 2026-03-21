@@ -13,6 +13,43 @@ type FetchResult = {
   error?: string;
 };
 
+type SearchHistoryEntry = {
+  name: string;
+  url: string;
+};
+
+const SEARCH_HISTORY_KEY = "pobb-search-history";
+
+function extractPlainTextFromHtml(html: string | null) {
+  if (!html) {
+    return "Consulta sem nome";
+  }
+
+  if (typeof window === "undefined") {
+    return html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+  }
+
+  const temp = document.createElement("div");
+  temp.innerHTML = html;
+  return temp.textContent?.replace(/\s+/g, " ").trim() || "Consulta sem nome";
+}
+
+function saveSearchHistory(entry: SearchHistoryEntry) {
+  try {
+    const rawHistory = window.localStorage.getItem(SEARCH_HISTORY_KEY);
+    const parsedHistory = rawHistory ? (JSON.parse(rawHistory) as SearchHistoryEntry[]) : [];
+
+    const dedupedHistory = parsedHistory.filter(
+      (item) => item.url !== entry.url || item.name !== entry.name
+    );
+
+    const nextHistory = [entry, ...dedupedHistory].slice(0, 10);
+    window.localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(nextHistory));
+  } catch {
+    // Ignore storage failures so the main flow keeps working.
+  }
+}
+
 export default function HomePage() {
   const [url, setUrl] = useState(""); // https://pobb.in/3J6Dm6pkA6-5
   const [loading, setLoading] = useState(false);
@@ -50,6 +87,10 @@ export default function HomePage() {
         setError(payload.error ?? "Falha ao buscar URL.");
       } else {
         setResult(payload);
+        saveSearchHistory({
+          name: extractPlainTextFromHtml(payload.ascendancyH1Html),
+          url
+        });
       }
     } catch {
       setError("Erro de rede ao chamar a API.");
@@ -87,7 +128,7 @@ export default function HomePage() {
           <div className="stack">
             {result.ascendancyH1Html ? (
               <div
-                className="muted"
+                className="muted ascendancy-title"
                 dangerouslySetInnerHTML={{ __html: result.ascendancyH1Html }}
               />
             ) : null}
@@ -98,21 +139,23 @@ export default function HomePage() {
               onClick={() => copyBuildcode(result.buildcode)}
               title="Clique para copiar"
             />
-            <button
-              className="button"
-              type="button"
-              onClick={() => copyBuildcode(result.buildcode)}
-            >
-              Copiar code
-            </button>
-            {result.poeNinjaCode ? (
-              <a
-                className="button pob-button"
-                href={`pob://poeninja/${result.poeNinjaCode}`}
+            <div className="action-row">
+              <button
+                className="button copy-button"
+                type="button"
+                onClick={() => copyBuildcode(result.buildcode)}
               >
-                Abrir no PoB
-              </a>
-            ) : null}
+                Copiar code
+              </button>
+              {result.poeNinjaCode ? (
+                <a
+                  className="button pob-button"
+                  href={`pob://poeninja/${result.poeNinjaCode}`}
+                >
+                  Abrir no PoB
+                </a>
+              ) : null}
+            </div>
             {copied ? <p className="success">Copiado! Importe no seu PoB.</p> : null}
           </div>
         ) : null}
