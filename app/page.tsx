@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 
 type FetchResult = {
   ok: boolean;
@@ -57,6 +57,17 @@ export default function HomePage() {
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [qrMissing, setQrMissing] = useState(false);
+  const [searchHistory, setSearchHistory] = useState<SearchHistoryEntry[]>([]);
+
+  useEffect(() => {
+    try {
+      const rawHistory = window.localStorage.getItem(SEARCH_HISTORY_KEY);
+      const parsedHistory = rawHistory ? (JSON.parse(rawHistory) as SearchHistoryEntry[]) : [];
+      setSearchHistory(parsedHistory);
+    } catch {
+      setSearchHistory([]);
+    }
+  }, []);
 
   async function copyBuildcode(value: string) {
     try {
@@ -68,8 +79,7 @@ export default function HomePage() {
     }
   }
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  async function executeLookup(nextUrl: string) {
     setLoading(true);
     setResult(null);
     setError(null);
@@ -79,7 +89,7 @@ export default function HomePage() {
       const response = await fetch("/api/pobb", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url })
+        body: JSON.stringify({ url: nextUrl })
       });
 
       const payload = (await response.json()) as FetchResult;
@@ -87,9 +97,16 @@ export default function HomePage() {
         setError(payload.error ?? "Falha ao buscar URL.");
       } else {
         setResult(payload);
-        saveSearchHistory({
+        const nextEntry = {
           name: extractPlainTextFromHtml(payload.ascendancyH1Html),
-          url
+          url: nextUrl
+        };
+        saveSearchHistory(nextEntry);
+        setSearchHistory((currentHistory) => {
+          const dedupedHistory = currentHistory.filter(
+            (item) => item.url !== nextEntry.url || item.name !== nextEntry.name
+          );
+          return [nextEntry, ...dedupedHistory].slice(0, 10);
         });
       }
     } catch {
@@ -99,8 +116,36 @@ export default function HomePage() {
     }
   }
 
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    await executeLookup(url);
+  }
+
+  async function handleHistoryClick(historyUrl: string) {
+    setUrl(historyUrl);
+    await executeLookup(historyUrl);
+  }
+
   return (
     <main>
+      {searchHistory.length > 0 ? (
+        <aside className="history-panel">
+          <h2 className="history-title">Historico</h2>
+          <div className="history-list">
+            {searchHistory.map((entry) => (
+              <button
+                key={`${entry.name}-${entry.url}`}
+                className="history-item"
+                type="button"
+                onClick={() => handleHistoryClick(entry.url)}
+              >
+                <span className="history-name">{entry.name}</span>
+                <span className="history-url">{entry.url}</span>
+              </button>
+            ))}
+          </div>
+        </aside>
+      ) : null}
       <div className="card stack">
         <h1>Consulta de URL pobb.in</h1>
         <p className="muted">
