@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { saveSearch } from "@/lib/db";
 
 type RequestBody = { url?: string };
 
@@ -15,6 +16,15 @@ function decodeHtmlEntities(value: string) {
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
     .replace(/&#x2F;/gi, "/");
+}
+
+function extractPlainTextFromHtml(html: string | null) {
+  if (!html) {
+    return "Consulta sem nome";
+  }
+
+  const raw = html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+  return decodeHtmlEntities(raw) || "Consulta sem nome";
 }
 
 function extractBuildcode(html: string) {
@@ -186,6 +196,9 @@ export async function POST(request: Request) {
         { status: 404 }
       );
     }
+
+    const buildName = extractPlainTextFromHtml(ascendancyH1Html);
+    await saveSearch(url, buildName);
 
     const { poeNinjaCode, poeNinjaUrl } = await uploadToPoeNinja(buildcode);
 

@@ -56,7 +56,6 @@ export default function HomePage() {
   const [result, setResult] = useState<FetchResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
-  const [qrMissing, setQrMissing] = useState(false);
   const [searchHistory, setSearchHistory] = useState<SearchHistoryEntry[]>([]);
 
   useEffect(() => {
@@ -224,16 +223,17 @@ export default function HomePage() {
         </svg>
         <span>GitHub</span>
       </a>
-      <img
-        style={{display: "none"}}
-        className="pix-qr"
-        src="/hylario-qr.png"
-        alt="QR code pixgg.com/Hylario"
-        onError={() => setQrMissing(true)}
-      />
-      {qrMissing ? (
-        <p className="pix-qr-missing">Imagem ausente: /public/hylario-qr.png</p>
-      ) : null}
+      <a
+        className="bmc-button"
+        href="https://www.buymeacoffee.com/hylario"
+        target="_blank"
+        rel="noreferrer"
+      >
+        <img
+          src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png"
+          alt="Buy Me A Coffee"
+        />
+      </a>
       <p className="repo-credit">
         Criado por{" "}
         <a

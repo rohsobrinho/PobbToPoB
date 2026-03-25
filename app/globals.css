@@ -231,30 +231,23 @@ main {
   height: 16px;
 }
 
-.pix-qr {
+.bmc-button {
   position: fixed;
   left: 16px;
   bottom: 16px;
   z-index: 45;
-  width: min(280px, 42vw);
-  height: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border-radius: 12px;
-  border: 1px solid rgba(148, 163, 184, 0.35);
   box-shadow: 0 16px 30px rgba(2, 6, 23, 0.45);
 }
 
-.pix-qr-missing {
-  position: fixed;
-  left: 16px;
-  bottom: 16px;
-  margin: 0;
-  z-index: 45;
-  padding: 10px 12px;
-  border-radius: 10px;
-  border: 1px solid rgba(148, 163, 184, 0.45);
-  background: rgba(2, 6, 23, 0.85);
-  color: #f8fafc;
-  font-size: 11px;
+.bmc-button img {
+  display: block;
+  width: 173.6px;
+  height: 48px;
+  border-radius: 12px;
 }
 
 .repo-credit {
@@ -295,15 +288,14 @@ main {
     font-size: 11px;
   }
 
-  .pix-qr {
+  .bmc-button {
     left: 10px;
     bottom: 10px;
-    width: min(200px, 52vw);
   }
 
-  .pix-qr-missing {
-    left: 10px;
-    bottom: 10px;
+  .bmc-button img {
+    width: min(173.6px, 52vw);
+    height: auto;
   }
 
   .repo-credit {
