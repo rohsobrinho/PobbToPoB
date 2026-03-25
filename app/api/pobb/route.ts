@@ -198,7 +198,7 @@ export async function POST(request: Request) {
     }
 
     const buildName = extractPlainTextFromHtml(ascendancyH1Html);
-    await saveSearch(url, buildName);
+    // await saveSearch(url, buildName);
 
     const { poeNinjaCode, poeNinjaUrl } = await uploadToPoeNinja(buildcode);
 
