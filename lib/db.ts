@@ -1,57 +1,54 @@
-import { DataSource } from "typeorm";
-import { SearchEntity, SearchSchema } from "@/lib/entities/search.entity";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 declare global {
   // eslint-disable-next-line no-var
-  var __pobbDataSource: DataSource | undefined;
-  // eslint-disable-next-line no-var
-  var __pobbDataSourcePromise: Promise<DataSource> | undefined;
+  var __pobbSupabase: SupabaseClient | undefined;
 }
 
-function getDatabaseUrl() {
-  const databaseUrl = process.env.DATABASE_URL;
-  if (!databaseUrl) {
-    throw new Error("DATABASE_URL nao configurada.");
+function getSupabaseUrl() {
+  const value = process.env.SUPABASE_URL;
+  if (!value) {
+    throw new Error("SUPABASE_URL nao configurada.");
   }
 
-  return databaseUrl;
+  return value;
 }
 
-function createDataSource() {
-  return new DataSource({
-    type: "postgres",
-    url: getDatabaseUrl(),
-    ssl: {
-      rejectUnauthorized: false
-    },
-    synchronize: false,
-    logging: false,
-    entities: [SearchSchema]
+function getSupabaseAnonKey() {
+  const value = process.env.SUPABASE_ANON_KEY;
+  if (!value) {
+    throw new Error("SUPABASE_ANON_KEY nao configurada.");
+  }
+
+  return value;
+}
+
+function getSupabaseServerKey() {
+  return process.env.SUPABASE_SERVICE_ROLE_KEY ?? getSupabaseAnonKey();
+}
+
+export const db =
+  global.__pobbSupabase ??
+  createClient(getSupabaseUrl(), getSupabaseServerKey(), {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false
+    }
   });
-}
 
-export async function getDataSource() {
-  if (global.__pobbDataSource?.isInitialized) {
-    return global.__pobbDataSource;
-  }
-
-  if (!global.__pobbDataSourcePromise) {
-    const dataSource = createDataSource();
-    global.__pobbDataSourcePromise = dataSource.initialize().then((initialized) => {
-      global.__pobbDataSource = initialized;
-      return initialized;
-    });
-  }
-
-  return global.__pobbDataSourcePromise;
+if (process.env.NODE_ENV !== "production") {
+  global.__pobbSupabase = db;
 }
 
 export async function saveSearch(url: string, buildName: string) {
-  const dataSource = await getDataSource();
-  const repository = dataSource.getRepository<SearchEntity>("Search");
-
-  await repository.insert({
+  const { error } = await db.from("searchs").insert({
     url,
-    buildName
+    build_name: buildName
   });
+
+  console.log(error);
+
+  if (error) {
+    throw new Error(`Falha ao salvar consulta: ${error.message}`);
+  }
 }
