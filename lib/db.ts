@@ -46,9 +46,48 @@ export async function saveSearch(url: string, buildName: string) {
     build_name: buildName
   });
 
-  console.log(error);
-
   if (error) {
     throw new Error(`Falha ao salvar consulta: ${error.message}`);
+  }
+}
+
+export type SearchRow = {
+  id?: string;
+  url: string;
+  build_name: string;
+  created_at: string;
+};
+
+export async function getRecentSearches(limit = 1000) {
+  const { data, error } = await db
+    .from("searchs")
+    .select("id, url, build_name, created_at")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    throw new Error(`Falha ao carregar consultas: ${error.message}`);
+  }
+
+  return (data ?? []) as SearchRow[];
+}
+
+export async function deleteSearchById(id: string) {
+  const { error } = await db.from("searchs").delete().eq("id", id);
+
+  if (error) {
+    throw new Error(`Falha ao deletar consulta: ${error.message}`);
+  }
+}
+
+export async function deleteSearchesByIds(ids: string[]) {
+  if (ids.length === 0) {
+    return;
+  }
+
+  const { error } = await db.from("searchs").delete().in("id", ids);
+
+  if (error) {
+    throw new Error(`Falha ao deletar consultas: ${error.message}`);
   }
 }
